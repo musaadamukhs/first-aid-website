@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>First Aid Aid Assistant</title> <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .chat-container {
+            max-height: 500px;
+            overflow-y: auto;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            background-color: #f3f4f6;
+            margin-bottom: 1rem;
+        }
+        .user-message {
+            background-color: #dcf8c6;
+            color: #1c5e15;
+            align-self: flex-end;
+            border-radius: 0.5rem;
+            padding: 0.5rem 1rem;
+            margin-bottom: 0.5rem;
+            max-width: 80%;
+        }
+        .ai-message {
+            background-color: #e5e7eb;
+            color: #374151;
+            align-self: flex-start;
+            border-radius: 0.5rem;
+            padding: 0.5rem 1rem;
+            margin-bottom: 0.5rem;
+            max-width: 80%;
+        }
+        .input-area {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        #message-input {
+            flex: 1;
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+        }
+        #send-button {
+            border-radius: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        #send-button:hover {
+            background-color: #45a049;
+        }
+        @media (max-width: 640px) {
+            .chat-container {
+                max-height: 400px;
+            }
+            .input-area {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            #send-button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex flex-col items-center justify-start min-h-screen py-2">
+    <header class="bg-green-500 w-full text-white text-center py-4 shadow-md rounded-b-md">
+        <h1 class="text-2xl font-semibold">First Aid Aid Assistant</h1> </header>
+    <main class="container mx-auto mt-8 p-4 bg-white rounded-lg shadow-lg flex flex-col items-stretch w-full max-w-2xl">
+        <div id="chat-container" class="chat-container flex flex-col">
+            </div>
+        <div class="input-area">
+            <input type="text" id="message-input" placeholder="Type your message..." class="flex-grow">
+            <button id="send-button" class="bg-green-500 hover:bg-green-600 text-white font-semibold rounded-md py-2 px-4 transition duration-300 ease-in-out">Send</button>
+        </div>
+    </main>
+
+    <script>
+        const chatContainer = document.getElementById('chat-container');
+        const messageInput = document.getElementById('message-input');
+        const sendButton = document.getElementById('send-button');
+
+        const firstAidProtocols = {
+            "choking": {
+                "keywords": ["choke", "choking", "can't breathe", "obstruction airway", "blockage"],
+                "age_prompt": "What is the age of the person? (adult, child, or infant)",
+                "adult_steps": [
+                    "1. Assess the situation: Is the person unable to speak, cough, or breathe effectively?",
+                    "2. If the person is conscious, stand behind them and wrap your arms around their waist.",
+                    "3. Make a fist with one hand and place it thumb-side in, just above the navel.",
+                    "4. Grasp your fist with your other hand.",
+                    "5. Deliver rapid, upward thrusts into the abdomen.",
+                    "6. Continue thrusts until the object is expelled or the person becomes unconscious.",
+                    "7. If the person becomes unconscious, lower them to the ground, call emergency services (e.g., 911/112), and begin CPR if trained."
+                ],
+                "child_steps": [
+                    "1. Determine if the child is choking. Look for signs like inability to cry, cough, or breathe.",
+                    "2. If the child is conscious, kneel behind them.",
+                    "3. Place one foot slightly in front of the other for stability.",
+                    "4. Make a fist and place it just above the child's navel.",
+                    "5. Grasp your fist with your other hand.",
+                    "6. Give quick, upward abdominal thrusts.",
+                    "7. Repeat until the object is dislodged or the child becomes unconscious.",
+                    "8. If the child becomes unconscious, call for help and begin CPR if trained."
+                ],
+                "infant_steps": [
+                    "1. Hold the infant face down on your forearm, supporting the head and jaw.",
+                    "2. Deliver 5 back blows between the shoulder blades using the heel of your hand.",
+                    "3. Turn the infant face up on your other forearm, supporting the head.",
+                    "4. Give 5 chest thrusts using two fingers in the center of the chest, just below the nipple line.",
+                    "5. Repeat back blows and chest thrusts until the object is expelled or the infant becomes unresponsive.",
+                    "6. If the infant becomes unresponsive, call for emergency medical services and begin CPR."
+                ],
+                "response": "Provide immediate assistance for choking.",
+                "call_911_reminder": "Call emergency services immediately if the person becomes unconscious or the obstruction is not relieved."
+            },
+            "bleeding": {
+                "keywords": ["bleeding", "cut", "wound", "blood", "hemorrhage", "bleeding out"],
+                "initial_response": "Control the bleeding.  Is the bleeding severe?",
+                "severe_steps": [
+                    "1. Call emergency services (e.g., 911/112) immediately if bleeding is severe or uncontrolled.",
+                    "2. Apply direct pressure to the wound with a clean cloth or dressing.",
+                    "3. If possible, elevate the injured area above the heart.",
+                    "4. If bleeding continues, apply additional dressings. Do not remove soaked ones.",
+                    "5. Consider using a tourniquet if bleeding is life-threatening and other measures fail (trained personnel only).",
+                    "6. Monitor the person for shock (pale skin, rapid pulse, dizziness).",
+                    "7. Keep the person warm and calm until help arrives."
+                ],
+                "minor_steps": [
+                    "1. Wash the wound with mild soap and clean water.",
+                    "2. Apply direct pressure with a clean cloth to stop the bleeding.",
+                    "3. Apply an antiseptic ointment.",
+                    "4. Cover the wound with a clean bandage.",
+                ],
+                "response": "Provide guidance for controlling bleeding.",
+                "call_911_reminder": "Seek immediate medical attention for severe or uncontrolled bleeding."
+            },
+            "unconscious": {
+                "keywords": ["unconscious", "passed out", "fainted", "not responsive", "blacked out"],
+                "initial_response": "Assess the person's condition. Are they breathing?",
+                "breathing_steps": [
+                    "1. Check for responsiveness: Gently tap and shout, 'Are you okay?'",
+                    "2. If the person is unresponsive but breathing, place them in the recovery position.",
+                    "3. Call emergency services (e.g., 911/112).",
+                    "4. Monitor their breathing until help arrives."
+                ],
+                "not_breathing_steps": [
+                    "1. Check for responsiveness: Gently tap and shout, 'Are you okay?'",
+                    "2. If the person is not breathing or not breathing normally, call emergency services (e.g., 911/112) immediately.",
+                    "3. Begin CPR: Place the heel of one hand in the center of the chest. Place your other hand on top.",
+                    "4. Give chest compressions: Push hard and fast in the center of the chest at a rate of 100-120 compressions per minute.",
+                    "5. Give rescue breaths (if trained): After 30 compressions, give two rescue breaths. Tilt the head back and lift the chin.",
+                    "6. Continue CPR until help arrives or the person starts breathing."
+                ],
+                "response": "Provide guidance for an unconscious person.",
+                "call_911_reminder": "Call emergency services immediately for any unconscious person."
+            },
+             "burn": {
+                "keywords": ["burn", "scald", "fire", "hot", "sunburn"],
+                "initial_response": "Assess the severity of the burn.",
+                "minor_steps": [
+                    "1. Cool the burn with cool (not cold) running water for 10-20 minutes.",
+                    "2. Remove any clothing or jewelry from the burned area, unless it's stuck to the skin.",
+                    "3. Apply a loose, sterile dressing to protect the burn.",
+                    "4. Use over-the-counter pain reliever as needed"
+                ],
+                "major_steps": [
+                    "1. Call emergency services (e.g 911/112)",
+                    "2. Do not remove burned clothing",
+                    "3. Monitor for shock, keep the person warm and elevated",
+                    "4. Cover the burn with a cool, moist sterile bandage or clean cloth"
+                ],
+                "chemical_steps": [
+                    "1. Flush the chemical off the skin with large amounts of water for at least 20 minutes",
+                    "2. Remove contaminated clothing",
+                    "3. Call emergency services"
+                ],
+                "response": "Provide guidance for burns.",
+                "call_911_reminder": "Seek immediate medical attention for large, deep, or chemical burns."
+            },
+            "allergic reaction": {
+                "keywords": ["allergic reaction", "allergy", "anaphylaxis", "hives", "swelling", "difficulty breathing"],
+                "initial_response": "Determine the severity of the allergic reaction.",
+                "mild_steps": [
+                    "1. Identify the allergen, if known, and avoid further exposure.",
+                    "2. Monitor the person for worsening symptoms.",
+                    "3. Consider an antihistamine."
+                ],
+                "severe_steps": [
+                    "1. Call emergency services (e.g 911/112)",
+                    "2. Check if the person has an epinephrine auto-injector (EpiPen). If so, help them use it.",
+                    "3. Keep the person lying down and elevated",
+                    "4. Monitor the person's breathing and responsiveness"
+                ],
+                "response": "Provide guidance for allergic reactions.",
+                "call_911_reminder": "Seek immediate medical attention for any signs of anaphylaxis (difficulty breathing, swelling of the face or throat, dizziness)."
+            }
+        };
+
+        function addMessageToChat(message, sender) {
+            const messageElement = document.createElement('div');
+            messageElement.classList.add(sender === 'user' ? 'user-message' : 'ai-message');
+            messageElement.textContent = message;
+            chatContainer.appendChild(messageElement);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function handleUserInput() {
+            const userText = messageInput.value.trim().toLowerCase();
+            if (userText === '') return;
+
+            addMessageToChat(userText, 'user');
+            messageInput.value = '';
+
+            let aiResponse = "I am unable to provide assistance for this situation. Please call emergency services.";
+            let scenarioFound = false;
+            let scenarioNameFound = null; // To store the scenario name
+
+            for (const scenarioName in firstAidProtocols) {
+                const protocol = firstAidProtocols[scenarioName];
+                for (const keyword of protocol.keywords) {
+                    if (userText.includes(keyword)) {
+                        scenarioFound = true;
+                        scenarioNameFound = scenarioName; // Store
+                        aiResponse = protocol.initial_response;
+                        break;
+                    }
+                }
+                if (scenarioFound) break;
+            }
+
+            if (scenarioFound) {
+                setTimeout(() => {
+                    addMessageToChat(aiResponse, 'ai');
+
+                    if (scenarioNameFound === "choking") {
+                        setTimeout(() => {
+                            const ageInput = prompt(firstAidProtocols[scenarioNameFound].age_prompt).toLowerCase();
+                            if (ageInput.includes("adult")) {
+                                aiResponse = "Instructions for Choking (Adult):\n" + firstAidProtocols[scenarioNameFound].adult_steps.join("\n");
+                            } else if (ageInput.includes("child")) {
+                                aiResponse = "Instructions for Choking (Child):\n" + firstAidProtocols[scenarioNameFound].child_steps.join("\n");
+                            } else if (ageInput.includes("infant")) {
+                                aiResponse = "Instructions for Choking (Infant):\n" + firstAidProtocols[scenarioNameFound].infant_steps.join("\n");
+                            } else {
+                                aiResponse = "I need age information to provide specific instructions.  Please call emergency services immediately.";
+                            }
+                             setTimeout(() => {
+                                addMessageToChat(aiResponse, 'ai');
+                                setTimeout(() => {
+                                    addMessageToChat(firstAidProtocols[scenarioNameFound].call_911_reminder, 'ai');
+                                }, 1000);
+                            }, 1000);
+                        }, 1000);
+                    }
+                    else if (scenarioNameFound === "bleeding") {
+                        setTimeout(()=> {
+                            const severityInput = prompt("Is the bleeding severe? (yes/no)").toLowerCase();
+                            if(severityInput.includes("yes")){
+                                aiResponse = "Instructions for Severe Bleeding:\n" + firstAidProtocols[scenarioNameFound].severe_steps.join("\n");
+                            }
+                            else{
+                                aiResponse = "Instructions for Minor Bleeding:\n" + firstAidProtocols[scenarioNameFound].minor_steps.join("\n");
+                            }
+                            setTimeout(() => {
+                                addMessageToChat(aiResponse, 'ai');
+                                setTimeout(() => {
+                                    addMessageToChat(firstAidProtocols[scenarioNameFound].call_911_reminder, 'ai');
+                                }, 1000);
+                            }, 1000);
+                        }, 1000);
+                    }
+                    else if (scenarioNameFound === "unconscious") {
+                         setTimeout(()=> {
+                            const breathingInput = prompt("Is the person breathing? (yes/no)").toLowerCase();
+                            if(breathingInput.includes("yes")){
+                                aiResponse = "Instructions for Unconscious Person (Breathing):\n" + firstAidProtocols[scenarioNameFound].breathing_steps.join("\n");
+                            }
+                            else{
+                                aiResponse = "Instructions for Unconscious Person (Not Breathing):\n" + firstAidProtocols[scenarioNameFound].not_breathing_steps.join("\n");
+                            }
+                            setTimeout(() => {
+                                addMessageToChat(aiResponse, 'ai');
+                                setTimeout(() => {
+                                    addMessageToChat(firstAidProtocols[scenarioNameFound].call_911_reminder, 'ai');
+                                }, 1000);
+                            }, 1000);
+                        }, 1000);
+                    }
+                    else if (scenarioNameFound === "burn") {
+                         setTimeout(()=> {
+                            const burnTypeInput = prompt("Is it a minor, major, or chemical burn?").toLowerCase();
+                            if(burnTypeInput.includes("minor")){
+                                aiResponse = "Instructions for Minor Burns:\n" + firstAidProtocols[scenarioNameFound].minor_steps.join("\n");
+                            }
+                            else if (burnTypeInput.includes("major")){
+                                aiResponse = "Instructions for Major Burns:\n" + firstAidProtocols[scenarioNameFound].major_steps.join("\n");
+                            }
+                            else if (burnTypeInput.includes("chemical")){
+                                 aiResponse = "Instructions for Chemical Burns:\n" + firstAidProtocols[scenarioNameFound].chemical_steps.join("\n");
+                            }
+                            else{
+                                aiResponse = "Please provide more details about the burn.";
+                            }
+                            setTimeout(() => {
+                                addMessageToChat(aiResponse, 'ai');
+                                setTimeout(() => {
+                                    addMessageToChat(firstAidProtocols[scenarioNameFound].call_911_reminder, 'ai');
+                                }, 1000);
+                            }, 1000);
+                        }, 1000);
+                    }
+                    else if (scenarioNameFound === "allergic reaction") {
+                         setTimeout(()=> {
+                            const severityInput = prompt("Is it a mild or severe allergic reaction?").toLowerCase();
+                            if(severityInput.includes("mild")){
+                                aiResponse = "Instructions for Mild Allergic Reactions:\n" + firstAidProtocols[scenarioNameFound].mild_steps.join("\n");
+                            }
+                            else{
+                                aiResponse = "Instructions for Severe Allergic Reactions:\n" + firstAidProtocols[scenarioNameFound].severe_steps.join("\n");
+                            }
+
+                            setTimeout(() => {
+                                addMessageToChat(aiResponse, 'ai');
+                                setTimeout(() => {
+                                     addMessageToChat(firstAidProtocols[scenarioNameFound].call_911_reminder, 'ai');
+                                }, 1000);
+                            }, 1000);
+                        }, 1000);
+                    }
+                    else {
+                        setTimeout(() => {
+                            addMessageToChat(aiResponse, 'ai');
+                        }, 1000);
+                    }
+                }, 500);
+            } else {
+                setTimeout(() => {
+                    addMessageToChat(aiResponse, 'ai');
+                }, 500);
+            }
+        }
+
+        sendButton.addEventListener('click', handleUserInput);
+        messageInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                handleUserInput();
+            }
+        });
+    </script>
+</body>
+</html>
