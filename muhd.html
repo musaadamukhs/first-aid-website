@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>First Aid AI Assistant - MediAssist AI</title>
+    <style>
+        /* CSS Styling - Embedded Directly */
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f7f6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 700px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            min-height: 80vh;
+        }
+
+        header {
+            background-color: #007bff;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid #0056b3;
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 1.8em;
+        }
+
+        .tagline {
+            font-size: 0.9em;
+            opacity: 0.9;
+            margin-top: 5px;
+        }
+
+        .chat-window {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 15px;
+            overflow: hidden;
+        }
+
+        .messages {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            scroll-behavior: smooth;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 10px 15px;
+            border-radius: 18px;
+            max-width: 80%;
+            word-wrap: break-word;
+            line-height: 1.5;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        .message p {
+            margin: 0;
+        }
+
+        .message img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+
+        .user-message {
+            background-color: #e0f7fa;
+            align-self: flex-end;
+            margin-left: auto;
+            border-bottom-right-radius: 2px;
+        }
+
+        .ai-message {
+            background-color: #f1f8e9;
+            align-self: flex-start;
+            margin-right: auto;
+            border-bottom-left-radius: 2px;
+        }
+
+        .input-area {
+            display: flex;
+            padding: 15px 10px;
+            border-top: 1px solid #eee;
+            background-color: #f9f9f9;
+        }
+
+        #user-input {
+            flex-grow: 1;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 25px;
+            font-size: 1em;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        #user-input:focus {
+            border-color: #007bff;
+        }
+
+        #send-button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            margin-left: 10px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s ease;
+            min-width: 80px;
+        }
+
+        #send-button:hover {
+            background-color: #0056b3;
+        }
+
+        footer {
+            background-color: #333;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-size: 0.8em;
+            border-top: 1px solid #444;
+            border-bottom-left-radius: 10px;
+            border-bottom-right-radius: 10px;
+        }
+
+        footer p {
+            margin: 5px 0;
+        }
+
+        .call-emergency-btn {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9em;
+            margin-top: 10px;
+            display: block;
+            width: fit-content;
+            margin-left: auto;
+            margin-right: auto;
+            transition: background-color 0.3s ease;
+        }
+
+        .call-emergency-btn:hover {
+            background-color: #c82333;
+        }
+
+        .typing-indicator {
+            font-style: italic;
+            opacity: 0.7;
+            align-self: flex-start;
+            margin-right: auto;
+            border-bottom-left-radius: 2px;
+            background-color: #e9e9e9; /* Lighter background for indicator */
+            color: #666;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 600px) {
+            .container {
+                width: 100%;
+                min-height: 100vh;
+                border-radius: 0;
+                box-shadow: none;
+            }
+
+            header {
+                border-radius: 0;
+            }
+
+            footer {
+                border-radius: 0;
+            }
+
+            .input-area {
+                padding: 10px 5px;
+            }
+
+            #user-input {
+                padding: 10px;
+            }
+
+            #send-button {
+                padding: 10px 15px;
+            }
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>FIRST AID AI ASSISTANCE</h1>
+            <p class="tagline">A life saving digital helper.</p>
+        </header>
+
+        <div class="chat-window">
+            <div class="messages" id="chat-messages">
+                <div class="message ai-message">
+                    <p>Hello! I'm first aid ai assistance. Please describe the emergency or symptoms you're experiencing or witnessing, and I'll do my best to provide guidance. Remember, in life-threatening emergencies, always call your local emergency services immediately.</p>
+                    <button class="call-emergency-btn" onclick="callEmergency()">Call 112 / Emergency</button>
+                </div>
+            </div>
+            <div class="input-area">
+                <input type="text" id="user-input" placeholder="Type your message here..." autofocus>
+                <button id="send-button">Send</button>
+            </div>
+        </div>
+
+        <footer>
+            <p>&copy; 2024 MediAssist AI. For informational purposes only. Always consult a medical professional.</p>
+            <p><strong>Disclaimer:</strong> This AI provides general first aid information and is not a substitute for professional medical advice, diagnosis, or treatment. In a medical emergency, call 112 (or your local emergency number) immediately.</p>
+        </footer>
+    </div>
+
+    <script>
+        // JavaScript Logic - Embedded Directly
+        document.addEventListener('DOMContentLoaded', () => {
+            const chatMessages = document.getElementById('chat-messages');
+            const userInput = document.getElementById('user-input');
+            const sendButton = document.getElementById('send-button');
+
+            // --- KNOWLEDGE BASE (40 scenarios) ---
+            const FIRST_AID_SCENARIOS = [
+                {
+                    "id": "scenario_001",
+                    "title": "Severe Bleeding / Deep Cut",
+                    "keywords": ["cut", "bleeding", "laceration", "wound", "deep cut", "severe bleeding", "gash", "slash", "blood", "heavy bleeding"],
+                    "symptoms_indicators": "Blood spurting or gushing, wound is deep and wide, doesn't stop bleeding after direct pressure.",
+                    "steps": [
+                        "1. Call your local emergency number (e.g., 112 or 911) immediately.",
+                        "2. Apply direct, firm pressure to the wound with a clean cloth or sterile dressing.",
+                        "3. If available, wear gloves to protect yourself.",
+                        "4. Elevate the injured area above the heart if possible.",
+                        "5. Do not remove embedded objects. Apply pressure around them.",
+                        "6. If bleeding soaks through, add more layers without removing the first ones.",
+                        "7. Keep the person calm and warm until medical help arrives."
+                    ],
+                    "warning_signs": "Bleeding not stopping, signs of shock (pale, rapid pulse, confusion), loss of consciousness.",
+                    "image_url": "https://via.placeholder.com/300x200?text=Bleeding+Control"
+                },
+                {
+                    "id": "scenario_002",
+                    "title": "Minor Burn (First Degree)",
+                    "keywords": ["burn", "scald", "heat injury", "minor burn", "hot", "painful skin", "redness", "steam", "sunburn", "light burn"],
+                    "symptoms_indicators": "Red skin, mild swelling, pain, no blisters or very small ones.",
+                    "steps": [
+                        "1. Immediately cool the burn with cool or lukewarm running water for 10-20 minutes. Do NOT use ice.",
+                        "2. Gently remove any jewelry or clothing near the burn, unless it's stuck to the skin.",
+                        "3. Cover the burn loosely with cling film or a clean, non-fluffy dressing.",
+                        "4. Take over-the-counter pain relievers if needed.",
+                        "5. Do not break any blisters if they form."
+                    ],
+                    "warning_signs": "Burn is larger than the palm of your hand, deep blisters, signs of infection, chemical or electrical burns.",
+                    "image_url": "https://via.placeholder.com/300x200?text=Minor+Burn+Care"
+                },
+                {
+                    "id": "scenario_003",
+                    "title": "Choking (Adult/Child)",
+                    "keywords": ["choking", "blocked airway", "coughing", "can't breathe", "something stuck", "gagging", "suffocating", "food caught"],
+                    "symptoms_indicators": "Inability to speak, cough, or breathe; grasping at the throat; blue lips/skin.",
+                    "steps": [
+                        "1. Ask: 'Are you choking?' If they nod and can't speak, tell them you're going to help.",
+                        "2. Give 5 sharp back blows between the shoulder blades with the heel of your hand.",
+                        "3. If back blows don't clear, perform 5 abdominal thrusts (Heimlich maneuver).",
+                        "4. Alternate 5 back blows and 5 abdominal thrusts until the obstruction clears or help arrives.",
+                        "5. If they become unconscious, start CPR immediately and call emergency services (112)."
+                    ],
+                    "warning_signs": "Loss of consciousness, inability to clear obstruction, signs of severe oxygen deprivation.",
+                    "image_url": "https://via.placeholder.com/300x200?text=Choking+Relief"
+                },
+                {
+                    "id": "scenario_004",
+                    "title": "CPR - Cardiopulmonary Resuscitation (Adult)",
+                    "keywords": ["cpr", "unconscious", "not breathing", "cardiac arrest", "no pulse", "chest compressions", "collapsed", "heart stopped"],
+                    "symptoms_indicators": "Unresponsive, not breathing normally (or at all), no signs of circulation.",
+                    "steps": [
+                        "1. Immediately call your local emergency number (e.g., 112 or 911).",
+                        "2. Lay the person on their back on a firm surface.",
+                        "3. Kneel beside them.",
+                        "4. Place the heel of one hand in the center of their chest, then place your other hand on top.",
+                        "5. Push hard and fast (100-120 compressions per minute), allowing the chest to fully recoil.",
+                        "6. After 30 compressions, give 2 rescue breaths (if trained and willing). Ensure head tilt/chin lift for airway.",
+                        "7. Continue cycles of 30 compressions and 2 breaths until medical help arrives or the person shows signs of life."
+                    ],
+                    "warning_signs": "No signs of improvement, need for professional medical intervention.",
+                    "image_url": "https://via.placeholder.com/300x200?text=CPR+Steps"
+                },
+                {
+                    "id": "scenario_005",
+                    "title": "Sprain or Strain",
+                    "keywords": ["sprain", "strain", "ankle pain", "wrist pain", "joint pain", "muscle pain", "twisted", "pulled muscle", "ligament injury"],
+                    "symptoms_indicators": "Pain, swelling, bruising, limited movement in a joint or muscle after an injury.",
+                    "steps": [
+                        "1. Use R.I.C.E. method: Rest the injured area.",
+                        "2. Apply Ice packs (wrapped in cloth) for 15-20 minutes every 2-3 hours.",
+                        "3. Compress the area with a bandage to reduce swelling.",
+                        "4. Elevate the injured limb above the heart.",
+                        "5. Take over-the-counter pain relievers if needed.",
+                        "6. See a doctor if pain is severe, movement is impossible, or swelling doesn't reduce."
+                    ],
+                    "warning_signs": "Severe pain, deformity, inability to bear weight, numbness, coldness in the limb.",
+                    "image_url": "https://via.placeholder.com/300x200?text=RICE+Method"
+                },
+                {
+                    "id": "scenario_006",
+                    "title": "Allergic Reaction (Mild)",
+                    "keywords": ["allergy", "allergic reaction", "rash", "hives", "itching", "sneezing", "mild reaction", "skin redness", "food reaction"],
+                    "symptoms_indicators": "Skin rash, hives, itching, mild swelling, sneezing, runny nose after exposure to an allergen.",
+                    "steps": [
+                        "1. Remove the person from the allergen if possible.",
+                        "2. Administer an antihistamine if available and appropriate (check dosage).",
+                        "3. Apply cool compresses to itchy areas.",
+                        "4. Monitor the person closely for worsening symptoms.",
+                        "5. Seek medical advice if symptoms persist or worsen."
+                    ],
+                    "warning_signs": "Difficulty breathing, swelling of the face/tongue/throat, dizziness, rapid pulse (signs of anaphylaxis - call 112 immediately).",
+                    "image_url": "https://via.placeholder.com/300x200?text=Allergy+Care"
+                },
+                {
+                    "id": "scenario_007",
+                    "title": "Fracture / Broken Bone",
+                    "keywords": ["fracture", "broken bone", "broken arm", "broken leg", "bone injury", "snap", "crack", "deformity", "limb pain"],
+                    "symptoms_indicators": "Severe pain, swelling, deformity, bruising, inability to move or bear weight on the injured limb.",
+                    "steps": [
+                        "1. Call your local emergency number (e.g., 112 or 911) immediately.",
+                        "2. Keep the person still and calm.",
+                        "3. Do not try to straighten the limb or push bone back in if visible.",
+                        "4. Immobilize the injured area using a splint (if trained and materials are available) or by supporting it with pillows/padding.",
+                        "5. Apply a cold pack (wrapped in cloth) to reduce swelling.",
+                        "6. Treat for shock by keeping the person warm."
+                    ],
+                    "warning_signs": "Open fracture (bone protruding), severe deformity, signs of shock, numbness or tingling below the injury.",
+                    "image_url": "https://via.placeholder.com/300x200?text=Fracture+Care"
+                },
+                {
+                    "id": "scenario_008",
+                    "title": "Fainting / Syncope",
+                    "keywords": ["fainting", "fainted", "passed out", "unconscious brief", "dizzy", "lightheaded", "collapsed", "blacked out"],
+                    "symptoms_indicators": "Sudden loss of consciousness, brief unresponsiveness, often recovers quickly.",
+                    "steps": [
+                        "1. If person feels faint, have them lie down with legs elevated or sit with head between knees.",
+                        "2. If unconscious, lay them on their back, loosen tight clothing around neck.",
+                        "3. Check for breathing and pulse. If not breathing, start CPR and call 112.",
+                        "4. Once conscious, keep them lying down for 10-15 minutes.",
+                        "5. Offer water or a sugary drink if they can swallow.",
+                        "6. Seek medical advice if fainting is recurrent, if they were injured during the fall, or for underlying cause."
+                    ],
+                    "warning_signs": "Not regaining consciousness quickly, seizures, injury during fall, heart problems.",
+                    "image_url": "https://via.placeholder.com/300x200?text=Fainting+Help"
+                },
+                {
+                    "id": "scenario_009",
+                    "title": "Heat Exhaustion",
+                    "keywords": ["heat exhaustion", "hot weather", "dizzy hot", "sweating heavy", "weak hot", "cramps hot", "overheated", "fatigue heat"],
+                    "symptoms_indicators": "Heavy sweating, cold/pale/clammy skin, fast/weak pulse, nausea, muscle cramps, dizziness, headache.",
+                    "steps": [
+                        "1. Move the person to a cooler place (shade or air-conditioned).",
+                        "2. Loosen clothing. Apply cool, wet cloths to skin.",
+                        "3. Give sips of cool water or a sports drink if they are conscious and can swallow.",
+                        "4. Monitor them closely. If symptoms worsen or don't improve in 1 hour, seek medical help.",
+                        "5. Do NOT give salt tablets."
+                    ],
+                    "warning_signs": "Body temperature above 104°F (40°C), confusion, loss of consciousness, hot/red/dry skin (signs of heatstroke - call 112 immediately).",
+                    "image_url": "https://via.placeholder.com/300x200?text=Heat+Exhaustion"
+                },
+                {
+                    "id": "scenario_010",
+                    "title": "Minor Head Injury / Concussion",
+                    "keywords": ["head injury", "bump head", "concussion", "headache after fall", "mild head trauma", "hit head", "dizzy head"],
+                    "symptoms_indicators": "Headache, dizziness, confusion, nausea, sensitivity to light/sound, minor bump or cut to the head.",
+                    "steps": [
+                        "1. Apply a cold compress (wrapped in cloth) to the injury site to reduce swelling.",
+                        "2. Rest in a quiet, dark room.",
+                        "3. Avoid strenuous activity and screen time for 24-48 hours.",
+                        "4. Take over-the-counter pain relievers if needed.",
+                        "5. Monitor for worsening symptoms over the next 24-48 hours.",
+                        "6. A responsible adult should check on them regularly, including waking them every few hours if sleeping."
+                    ],
+                    "warning_signs": "Loss of consciousness (even brief), persistent vomiting, severe headache getting worse, slurred speech, weakness/numbness, seizures, pupils of different sizes.",
+                    "image_url": "https://via.placeholder.com/300x200?text=Head+Injury+Care"
+                },
+                {
+                    "id": "scenario_011",
+                    "title": "Nosebleed",
+                    "keywords": ["nosebleed", "bloody nose", "nose bleeding", "epistaxis"],
+                    "symptoms_indicators": "Blood coming from one or both nostrils.",
+                    "steps": [
+                        "1. Sit upright and lean slightly forward, not backward.",
+                        "2. Pinch the soft part of your nose just above the nostrils for 10-15 minutes.",
+                        "3. Breathe through your mouth.",
+                        "4. Apply a cold compress to the bridge of your nose.",
+                        "5. Avoid blowing your nose or picking at it for several hours after it stops."
+                    ],
+                    "warning_signs": "Bleeding lasting longer than 20 minutes, very heavy bleeding, frequent nosebleeds, weakness, dizziness.",
+                    "image_url": "https://via.placeholder.com/300x200?text=Nosebleed+Stop"
+                },
+                {
+                    "id": "scenario_012",
+                    "title": "Insect Bite or Sting (Mild)",
+                    "keywords": ["insect bite", "bee sting", "wasp sting", "mosquito bite", "spider bite", "itchy bite", "mild sting"],
+                    "symptoms_indicators": "Pain, swelling, redness, and itching at the site of the bite/sting.",
+                    "steps": [
+                        "1. Remove the stinger if visible (scrape with a credit card, don't squeeze).",
+                        "2. Wash the area with soap and water.",
+                        "3. Apply a cold compress to reduce swelling and pain.",
+                        "4. Use a hydrocortisone cream or antihistamine for itching.",
+                        "5. Monitor for signs of allergic reaction."
+                    ],
+                    "warning_signs": "Difficulty breathing, swelling of face/throat/tongue, widespread rash/hives, dizziness, nausea (signs of severe allergic reaction - call 112).",
+                    "image_url": "https://via.placeholder.com/300x200?text=Insect+Bite+Care"
+                },
+                {
+                    "id": "scenario_013",
+                    "title": "Minor Eye Injury (Foreign Object)",
+                    "keywords": ["eye injury", "something in eye", "dust in eye", "irritated eye", "eye pain", "foreign object eye"],
+                    "symptoms_indicators": "Irritation, redness, tearing, feeling of something in the eye.",
+                    "steps": [
+                        "1. Do not rub the eye.",
+                        "2. Wash hands thoroughly.",
+                        "3. Try to flush the eye with clean water or saline solution.",
+                        "4. Pull the upper eyelid over the lower eyelid to help dislodge.",
+                        "5. If still present, lift the upper eyelid and check for object; if found, try to gently remove with damp cotton swab.",
+                        "6. If unsuccessful or if pain/redness persists, seek medical attention."
+                    ],
+                    "warning_signs": "Severe pain, vision changes, chemical splash, object embedded in the eye, persistent redness/irritation.",
+                    "image_url": "https://via.placeholder.com/300x200?text=Eye+Rinse"
+                },
+                {
+                    "id": "scenario_014",
+                    "title": "Diabetic Emergency (Hypoglycemia - Low Blood Sugar)",
+                    "keywords": ["diabetes emergency", "low blood sugar", "hypoglycemia", "diabetic faint", "insulin shock", "shaky diabetic"],
+                    "symptoms_indicators": "Shakiness, sweating, confusion, dizziness, hunger, rapid heartbeat, slurred speech (in a diabetic person).",
+                    "steps": [
+                        "1. If conscious and able to swallow, give something sugary (e.g., fruit juice, regular soda, glucose tablets, candy).",
+                        "2. Wait 15 minutes, then check blood sugar. If still low, repeat sugary snack.",
+                        "3. Once blood sugar is normal, give a small meal or snack.",
+                        "4. If unconscious or unable to swallow, do NOT give anything by mouth. Call 112 immediately."
+                    ],
+                    "warning_signs": "Loss of consciousness, seizures, inability to swallow. Treat as severe emergency.",
+                    "image_url": "https://via.placeholder.com/300x200?text=Low+Blood+Sugar"
+                },
+                {
+                    "id": "scenario_015",
+                    "title": "Seizure (Generalized Tonic-Clonic)",
+                    "keywords": ["seizure", "epilepsy", "convulsion", "fitting", "unconscious seizure"],
+                    "symptoms_indicators": "Sudden loss of consciousness, body stiffening, uncontrollable jerking movements, foaming at mouth, sometimes loss of bladder/bowel control.",
+                    "steps": [
+                        "1. Stay calm. Time the seizure.",
+                        "2. Protect the person from injury: move objects away, place something soft under their head.",
+                        "3. Do NOT restrain them or put anything in their mouth.",
+                        "4. Turn them gently onto their side once jerking stops to help with breathing.",
+                        "5. Stay with them until they fully recover. They may be confused afterwards.",
+                        "6. Call 112 if seizure lasts longer than 5 minutes, another seizure starts, person is injured, pregnant, diabetic, or doesn't regain consciousness."
+                    ],
+                    "warning_signs": "Seizure > 5 mins, multiple seizures, first seizure, difficulty breathing after, injury.",
+                    "image_url": "https://via.placeholder.com/300x200?text=Seizure+Safety"
+                },
+                {
+                    "id": "scenario_016",
+                    "title": "Stroke",
+                    "keywords": ["stroke", "sudden weakness", "numbness one side", "slurred speech", "face drooping", "balance loss", "FAST"],
+                    "symptoms_indicators": "Sudden onset of: Face drooping, Arm weakness, Speech difficulty, Time to call 112 (FAST acronym).",
+                    "steps": [
+                        "1. Call 112 immediately. Time is critical for stroke treatment.",
+                        "2. Note the time symptoms began.",
+                        "3. Keep the person calm and comfortable.",
+                        "4. Do NOT give them anything to eat or drink.",
+                        "5. If unconscious, place them in the recovery position.",
+                        "6. Loosen any tight clothing around their neck."
+                    ],
+                    "warning_signs": "Any sudden neurological changes as described by FAST.",
+                    "image_url": "https://via.placeholder.com/300x200?text=Stroke+FAST"
+                },
+                {
+                    "id": "scenario_017",
+                    "title": "Poisoning (Ingested)",
+                    "keywords": ["poisoning", "ate something bad", "swallowed poison", "chemical ingestion", "drug overdose", "toxic"],
+                    "symptoms_indicators": "Nausea, vomiting, abdominal pain, dizziness, confusion, unusual breath odor, empty containers nearby.",
+                    "steps": [
+                        "1. If the person is unconscious or not breathing, call 112 immediately and begin CPR if needed.",
+                        "2. If conscious, call a poison control center immediately (e.g., Nigeria Centre for Disease Control: 0800 970000 10).",
+                        "3. Do NOT induce vomiting unless advised by poison control or medical professional.",
+                        "4. Gather any containers, labels, or plant parts to give to emergency responders.",
+                        "5. Keep the person calm and comfortable."
+                    ],
+                    "warning_signs": "Loss of consciousness, seizures, difficulty breathing, severe vomiting/pain, vision changes.",
+                    "image_url": "https://via.placeholder.com/300x200?text=Poisoning+Action"
+                },
+                {
+                    "id": "scenario_018",
+                    "title": "Animal Bite (Non-Severe)",
+                    "keywords": ["animal bite", "dog bite", "cat bite", "scratch animal", "minor bite"],
+                    "symptoms_indicators": "Puncture wound, skin break, redness, minor bleeding.",
+                    "steps": [
+                        "1. Wash the wound thoroughly with soap and water for 5-10 minutes.",
+                        "2. Apply gentle pressure with a clean cloth to stop minor bleeding.",
+                        "3. Apply an antiseptic ointment (e.g., povidone-iodine).",
+                        "4. Cover the wound with a sterile bandage.",
+                        "5. Seek medical attention for any animal bite, especially if deep, bleeding heavily, or if animal is unknown/wild due to rabies risk.",
+                        "6. Document the animal's vaccination status if known."
+                    ],
+                    "warning_signs": "Deep puncture wounds, uncontrolled bleeding, signs of infection (redness, swelling, pus, fever), animal suspected of rabies.",
+                    "image_url": "https://via.placeholder.com/300x200?text=Animal+Bite+Care"
+                },
+                {
+                    "id": "scenario_019",
+                    "title": "Shock (Circulatory)",
+                    "keywords": ["shock", "pale skin", "rapid pulse", "confusion", "weakness", "cold clammy skin"],
+                    "symptoms_indicators": "Pale, cold, clammy skin; rapid, weak pulse; rapid, shallow breathing; dilated pupils; weakness; confusion; anxiety; dizziness.",
+                    "steps": [
+                        "1. Call 112 immediately.",
+                        "2. Lay the person down on their back.",
+                        "3. Elevate their legs about 12 inches (unless head or leg injury suspected).",
+                        "4. Loosen tight clothing.",
+                        "5. Keep the person warm with a blanket or coat.",
+                        "6. Do NOT give anything to eat or drink.",
+                        "7. Turn them to the side if they vomit or are unconscious and not breathing normally."
+                    ],
+                    "warning_signs": "Any signs of shock, especially following injury, severe bleeding, or allergic reaction.",
+                    "image_url": "https://via.placeholder.com/300x200?text=Shock+Treatment"
+                },
+                {
+                    "id": "scenario_020",
+                    "title": "Nausea and Vomiting (Non-Emergency)",
+                    "keywords": ["nausea", "vomiting", "stomach upset", "feeling sick", "throwing up", "gastrointestinal upset"],
+                    "symptoms_indicators": "Feeling unwell, urge to vomit, actual vomiting, general discomfort.",
+                    "steps": [
+                        "1. Rest and avoid solid foods for a few hours.",
+                        "2. Sip clear fluids (water, clear broth, electrolyte solution) frequently in small amounts.",
+                        "3. Avoid fatty, spicy, or sugary foods.",
+                        "4. Gradually reintroduce bland foods (e.g., crackers, toast, rice).",
+                        "5. Seek medical advice if vomiting persists for more than 24 hours (children) or 48 hours (adults), or accompanied by severe pain, fever, or dehydration."
+                    ],
+                    "warning_signs": "Signs of dehydration (decreased urination, extreme thirst, dry mouth), severe abdominal pain, high fever, blood in vomit, signs of poisoning.",
+                    "image_url": "https://via.placeholder.com/300x200?text=Nausea+Relief"
+                },
+                {
+                    "id": "scenario_021",
+                    "title": "Fever (Adult)",
+                    "keywords": ["fever", "high temperature", "hot body", "chills", "feverish", "temperature"],
+                    "symptoms_indicators": "Body temperature above 100.4°F (38°C), chills, sweats, headache, body aches.",
+                    "steps": [
+                        "1. Take over-the-counter fever reducers (e.g., paracetamol, ibuprofen) as directed.",
+                        "2. Drink plenty of fluids to stay hydrated.",
+                        "3. Rest as much as possible.",
+                        "4. Wear light clothing and keep the room cool.",
+                        "5. Take a lukewarm bath or use cool compresses if comfortable.",
+                        "6. Seek medical attention if fever is above 103°F (39.4°C), lasts more than 3 days, or is accompanied by severe symptoms."
+                    ],
+                    "warning_signs": "Fever above 104°F (40°C), severe headache, stiff neck, rash, difficulty breathing, seizures, confusion, persistent vomiting.",
+                    "image_url": "https://via.placeholder.com/300x200?text=Fever+Care"
+                },
+                {
+                    "id": "scenario_022",
+                    "title": "Bee or Wasp Sting (Allergic Reaction)",
+                    "keywords": ["bee sting allergy", "wasp sting allergy", "anaphylaxis sting", "swelling after sting", "difficulty breathing after sting"],
+                    "symptoms_indicators": "Widespread hives, swelling of face/lips/throat, difficulty breathing, wheezing, dizziness, rapid pulse, nausea/vomiting after a sting.",
+                    "steps": [
+                        "1. Call 112 immediately. This is a medical emergency.",
+                        "2. If the person has an adrenaline auto-injector (EpiPen), help them administer it immediately.",
+                        "3. Lay the person down with their legs elevated, unless they have difficulty breathing, then help them sit up.",
+                        "4. Loosen tight clothing around their neck.",
+                        "5. If they become unconscious, place them in the recovery position or start CPR if not breathing normally.",
+                        "6. Monitor their breathing and consciousness until emergency services arrive."
+                    ],
+                    "warning_signs": "Any signs of anaphylaxis (difficulty breathing, swelling of throat/face, rapid pulse, dizziness, widespread rash).",
+                    "image_url": "https://via.placeholder.com/300x200?text=Allergic+Reaction"
+                },
+                {
+                    "id": "scenario_023",
+                    "title": "Minor Cut or Scrape",
+                    "keywords": ["minor cut", "scrape", "grazes", "small wound", "knee scrape", "finger cut"],
+                    "symptoms_indicators": "Minor skin break, light bleeding or oozing, superficial injury.",
+                    "steps": [
+                        "1. Wash hands thoroughly with soap and water.",
+                        "2. Clean the wound gently with mild soap and running water to remove dirt and debris.",
+                        "3. Apply gentle pressure with a clean cloth to stop any minor bleeding.",
+                        "4. Apply a thin layer of antiseptic ointment (e.g., Neosporin) to prevent infection.",
+                        "5. Cover the wound with a sterile bandage to keep it clean and protected.",
+                        "6. Change the dressing daily or if it becomes wet or dirty.",
+                        "7. Monitor for signs of infection (increased redness, swelling, pus, pain)."
+                    ],
+                    "warning_signs": "Signs of infection, deep cut, persistent bleeding, numbness, or if it doesn't heal within a week.",
+                    "image_url": "https://via.placeholder.com/300x200?text=Minor+Cut+Care"
+                },
+                {
+                    "id": "scenario_024",
+                    "title": "Splinter Removal",
+                    "keywords": ["splinter", "thorn", "wood in skin", "glass in skin"],
+                    "symptoms_indicators": "Small object embedded in the skin, localized pain.",
+                    "steps": [
+                        "1. Wash hands and the area around the splinter with soap and water.",
+                        "2. Sterilize tweezers and a needle (if needed) with rubbing alcohol or by heating them in a flame and letting them cool.",
+                        "3. Gently grasp the part of the splinter sticking out with tweezers and pull it out slowly at the same angle it entered.",
+                        "4. If the splinter is completely under the skin, gently break the skin with the sterile needle to expose an end, then remove with tweezers.",
+                        "5. After removal, wash the area again with soap and water and apply antiseptic.",
+                        "6. Cover with a bandage if necessary."
+                    ],
+                    "warning_signs": "Splinter is deeply embedded, causes severe pain, is near the eye, or if signs of infection develop.",
+                    "image_url": "https://via.placeholder.com/300x200?text=Splinter+Removal"
+                },
+                {
+                    "id": "scenario_025",
+                    "title": "Nosebleed (Persistent/Severe)",
+                    "keywords": ["nosebleed not stopping", "heavy nosebleed", "frequent nosebleeds", "severe nosebleed"],
+                    "symptoms_indicators": "Nosebleed that continues despite 20 minutes of continuous pressure, very heavy blood flow, dizziness, weakness.",
+                    "steps": [
+                        "1. Call 112 immediately if bleeding is very heavy, lasts more than 20 minutes, or the person feels faint/dizzy.",
+                        "2. Continue to apply firm, constant pressure to the soft part of the nose just above the nostrils.",
+                        "3. Keep the person calm, sitting upright and leaning forward.",
+                        "4. Do NOT pack the nose with gauze or tissue unless specifically instructed by medical personnel.",
+                        "5. If possible, apply an ice pack to the bridge of the nose and the back of the neck."
+                    ],
+                    "warning_signs": "Bleeding lasting over 20 minutes, signs of shock, difficulty breathing, if caused by a head injury.",
+                    "image_url": "https://via.placeholder.com/300x200?text=Severe+Nosebleed"
+                },
+                {
+                    "id": "scenario_026",
+                    "title": "Frostbite (Mild)",
+                    "keywords": ["frostbite", "cold injury", "frozen skin", "numb cold skin", "tingling cold"],
+                    "symptoms_indicators": "White, waxy, or grayish skin; numbness; stiffness in affected area after cold exposure. No blisters yet.",
+                    "steps": [
+                        "1. Move the person to a warm place.",
+                        "2. Slowly rewarm the affected area by soaking it in warm (not hot!) water (104-108°F / 40-42°C) for 20-30 minutes.",
+                        "3. Do NOT rub the affected area, as this can cause further damage.",
+                        "4. Do NOT use direct dry heat (like a fire or radiator).",
+                        "5. Separate affected fingers or toes with sterile gauze.",
+                        "6. Seek medical attention as soon as possible, especially if numbness persists or blisters form."
+                    ],
+                    "warning_signs": "Deep numbness, blistering, black or hardened skin (indicates severe frostbite), signs of hypothermia.",
+                    "image_url": "https://via.placeholder.com/300x200?text=Frostbite+Care"
+                },
+                {
+                    "id": "scenario_027",
+                    "title": "Hypothermia (Mild)",
+                    "keywords": ["hypothermia", "cold exposure", "shivering uncontrollably", "low body temperature", "feeling very cold", "cold and confused"],
+                    "symptoms_indicators": "Shivering, cold skin, confusion, mild clumsiness, slurred speech (body temperature below 95°F / 35°C).",
+                    "steps": [
+                        "1. Move the person to a warm, dry place.",
+                        "2. Remove any wet clothing and replace with dry, warm clothes or blankets.",
+                        "3. Wrap them in blankets, coats, or towels, covering their head but leaving their face exposed.",
+                        "4. Offer warm, sweet drinks (non-alcoholic) if they are conscious and can swallow.",
+                        "5. Share body heat if necessary (skin-to-skin contact under blankets).",
+                        "6. Monitor their condition closely and seek medical help if symptoms worsen or don't improve."
+                    ],
+                    "warning_signs": "Severe shivering stopping, no shivering, loss of consciousness, weak pulse, shallow breathing (severe hypothermia - call 112 immediately).",
+                    "image_url": "https://via.placeholder.com/300x200?text=Hypothermia+Care"
+                },
+                {
+                    "id": "scenario_028",
+                    "title": "Dislocation",
+                    "keywords": ["dislocation", "dislocated shoulder", "dislocated finger", "joint out of place", "popped out joint"],
+                    "symptoms_indicators": "Severe pain, visible deformity of the joint, swelling, inability to move the joint.",
+                    "steps": [
+                        "1. Call 112 or seek immediate medical attention.",
+                        "2. Do NOT try to move or straighten the joint back into place.",
+                        "3. Support the injured joint with pillows or padding to keep it still.",
+                        "4. Apply a cold pack (wrapped in cloth) to the area to reduce pain and swelling.",
+                        "5. Keep the person calm until medical help arrives."
+                    ],
+                    "warning_signs": "Severe pain, open dislocation (bone visible), numbness or coldness in the limb below the injury.",
+                    "image_url": "https://via.placeholder.com/300x200?text=Dislocation+Care"
+                },
+                {
+                    "id": "scenario_029",
+                    "title": "Chemical Burn",
+                    "keywords": ["chemical burn", "acid burn", "alkali burn", "chemical on skin", "corrosive burn"],
+                    "symptoms_indicators": "Pain, redness, irritation, sometimes blistering or blackened skin after exposure to a chemical.",
+                    "steps": [
+                        "1. Call 112 immediately.",
+                        "2. Immediately flush the affected area with large amounts of cool running water for at least 20 minutes (longer for strong chemicals or if pain persists).",
+                        "3. While flushing, remove any contaminated clothing or jewelry.",
+                        "4. Do NOT try to neutralize the chemical.",
+                        "5. Cover the burn loosely with a clean, dry dressing.",
+                        "6. Take the chemical container or label with you to the hospital if possible."
+                    ],
+                    "warning_signs": "Deep burn, large area affected, chemical in eye, difficulty breathing, signs of shock.",
+                    "image_url": "https://via.placeholder.com/300x200?text=Chemical+Burn"
+                },
+                {
+                    "id": "scenario_030",
+                    "title": "Electric Shock (Minor)",
+                    "keywords": ["electric shock", "electrocution minor", "shocked by electricity", "tingling electric"],
+                    "symptoms_indicators": "Mild tingling sensation, numbness, muscle spasm, or a small burn at the contact site. Person is conscious.",
+                    "steps": [
+                        "1. Ensure the power source is OFF before approaching the person. If you cannot turn off the power, do NOT touch them. Use a non-conductive object (wooden stick, plastic broom handle) to separate them from the source.",
+                        "2. Call 112 if the person is unconscious, has difficulty breathing, has a severe burn, or if the shock was from a high voltage source.",
+                        "3. Check for burns and treat them as a burn.",
+                        "4. Keep the person calm and warm.",
+                        "5. Seek medical attention if symptoms persist or if the person experiences any chest pain, shortness of breath, or palpitations."
+                    ],
+                    "warning_signs": "Loss of consciousness, difficulty breathing, irregular heartbeat, severe burns, shock, if the person was wet or stood in water, if from a high voltage source.",
+                    "image_url": "https://via.placeholder.com/300x200?text=Electric+Shock+Care"
+                },
+                {
+                    "id": "scenario_031",
+                    "title": "Conscious Casualty (General Assessment)",
+                    "keywords": ["conscious person", "what to do conscious", "general first aid", "person is awake"],
+                    "symptoms_indicators": "Person is awake, can communicate, but may be injured or unwell.",
+                    "steps": [
+                        "1. Ensure scene safety for yourself and the person.",
+                        "2. Introduce yourself and ask for consent to help.",
+                        "3. Ask what happened and where they are feeling pain or discomfort.",
+                        "4. Perform a rapid head-to-toe assessment if appropriate.",
+                        "5. Reassure the person and keep them calm.",
+                        "6. Stay with them and monitor their condition until help arrives or they feel better.",
+                        "7. Call 112 if their condition worsens or if you suspect a serious injury/illness."
+                    ],
+                    "warning_signs": "Worsening pain, loss of consciousness, signs of shock, difficulty breathing, severe bleeding, or any sign of a serious medical emergency.",
+                    "image_url": "https://via.placeholder.com/300x200?text=Conscious+Care"
+                },
+                {
+                    "id": "scenario_032",
+                    "title": "Unconscious But Breathing (Recovery Position)",
+                    "keywords": ["unconscious breathing", "unresponsive breathing", "recovery position", "passed out breathing"],
+                    "symptoms_indicators": "Person is unresponsive to voice or touch, but you can see/feel/hear them breathing normally.",
+                    "steps": [
+                        "1. Call 112 immediately.",
+                        "2. Check for normal breathing (look, listen, feel for 10 seconds).",
+                        "3. If breathing normally, gently roll the person onto their side into the recovery position (arm nearest you at right angle, other hand under cheek, knee bent to stabilize).",
+                        "4. Ensure their airway is open (head tilt, chin lift).",
+                        "5. Loosen any tight clothing.",
+                        "6. Monitor their breathing continuously until emergency services arrive.",
+                        "7. If they stop breathing, begin CPR immediately."
+                    ],
+                    "warning_signs": "Stopping breathing, changes in breathing pattern, signs of head/spinal injury (avoid moving if suspected unless necessary to open airway).",
+                    "image_url": "https://via.placeholder.com/300x200?text=Recovery+Position"
+                },
+                {
+                    "id": "scenario_033",
+                    "title": "Snake Bite",
+                    "keywords": ["snake bite", "venomous snake", "snake attack", "poisonous snake"],
+                    "symptoms_indicators": "Puncture marks, swelling, pain, discoloration, nausea, vomiting, dizziness, weakness, difficulty breathing.",
+                    "steps": [
+                        "1. Call 112 immediately. Note the time of the bite.",
+                        "2. Keep the person calm and still. Movement can spread venom.",
+                        "3. Keep the bitten area below the level of the heart if possible.",
+                        "4. Remove any tight clothing or jewelry near the bite.",
+                        "5. Clean the wound with soap and water if available.",
+                        "6. Do NOT try to cut the wound, suck out venom, apply a tourniquet, or apply ice.",
+                        "7. If possible, try to remember the snake's color and shape (without putting yourself at risk). This helps with antivenom."
+                    ],
+                    "warning_signs": "Rapid swelling, severe pain, vision problems, difficulty breathing, signs of shock, collapse.",
+                    "image_url": "https://via.placeholder.com/300x200?text=Snake+Bite+Care"
+                },
+                {
+                    "id": "scenario_034",
+                    "title": "Spinal Injury (Suspected)",
+                    "keywords": ["spinal injury", "back injury", "neck injury", "paralysis", "can't move limbs", "fall on back", "head trauma"],
+                    "symptoms_indicators": "Pain in neck/back, numbness, tingling, weakness or paralysis in limbs, loss of bladder/bowel control, difficulty breathing, deformity.",
+                    "steps": [
+                        "1. Call 112 immediately.",
+                        "2. Do NOT move the person unless they are in immediate danger (e.g., fire). Any movement could worsen the injury.",
+                        "3. Keep their head, neck, and spine as still as possible. You can use rolled towels or clothing to support the head.",
+                        "4. Reassure the person and keep them warm.",
+                        "5. Monitor their breathing and consciousness. If they stop breathing, begin CPR (carefully, minimizing head movement if possible).",
+                        "6. Stay with them until emergency services arrive."
+                    ],
+                    "warning_signs": "Any of the above symptoms after a fall, car accident, or other high-impact injury.",
+                    "image_url": "https://via.placeholder.com/300x200?text=Spinal+Injury"
+                },
+                {
+                    "id": "scenario_035",
+                    "title": "Minor Head Injury (Children/Babies)",
+                    "keywords": ["baby head bump", "child head injury", "toddler head trauma", "fall head child"],
+                    "symptoms_indicators": "Crying, a small bump or bruise, no loss of consciousness, normal behavior after a brief cry.",
+                    "steps": [
+                        "1. Apply a cold compress (wrapped in cloth) to the bump for 10-20 minutes.",
+                        "2. Observe the child closely for at least 24-48 hours.",
+                        "3. Keep them calm and allow them to rest.",
+                        "4. Awaken them periodically during sleep to check for alertness and responsiveness.",
+                        "5. Offer reassurance.",
+                        "6. Seek medical advice if any worrying symptoms develop."
+                    ],
+                    "warning_signs": "Loss of consciousness (even brief), persistent vomiting, severe headache, confusion, unusual drowsiness, poor balance, seizures, swelling soft spot (infants), pupils of different sizes. Call 112 immediately if these occur.",
+                    "image_url": "https://via.placeholder.com/300x200?text=Child+Head+Injury"
+                },
+                {
+                    "id": "scenario_036",
+                    "title": "Suffocation",
+                    "keywords": ["suffocation", "can't breathe", "air blocked", "no air", "smothering"],
+                    "symptoms_indicators": "Inability to breathe, blue skin/lips, struggling for air, loss of consciousness.",
+                    "steps": [
+                        "1. Remove the cause of suffocation immediately and safely if possible (e.g., clear airway if object is visible and removable).",
+                        "2. Call 112 immediately.",
+                        "3. If the person is unconscious and not breathing normally, begin CPR.",
+                        "4. If conscious but unable to breathe, treat as choking (back blows and abdominal thrusts).",
+                        "5. Continue rescue efforts until medical help arrives."
+                    ],
+                    "warning_signs": "Any difficulty breathing, blue discoloration, loss of consciousness.",
+                    "image_url": "https://via.placeholder.com/300x200?text=Suffocation+Help"
+                },
+                {
+                    "id": "scenario_037",
+                    "title": "Diabetic Emergency (Hyperglycemia - High Blood Sugar)",
+                    "keywords": ["high blood sugar", "hyperglycemia", "diabetic coma", "ketoacidosis"],
+                    "symptoms_indicators": "Increased thirst, frequent urination, headache, fatigue, blurred vision, fruity-smelling breath (severe cases).",
+                    "steps": [
+                        "1. Encourage the person to check their blood sugar if they can.",
+                        "2. Encourage them to drink sugar-free fluids (water).",
+                        "3. Do NOT give them sugary foods or drinks.",
+                        "4. If they have insulin, help them take it as prescribed.",
+                        "5. Seek medical attention if symptoms worsen, blood sugar remains high despite insulin, or if they show signs of diabetic ketoacidosis (fruity breath, deep rapid breathing, confusion).",
+                        "6. If unconscious, call 112 and place in recovery position."
+                    ],
+                    "warning_signs": "Confusion, extreme drowsiness, fruity breath, rapid deep breathing, unconsciousness. Call 112 immediately.",
+                    "image_url": "https://via.placeholder.com/300x200?text=High+Blood+Sugar"
+                },
+                {
+                    "id": "scenario_038",
+                    "title": "Heart Attack (Suspected)",
+                    "keywords": ["heart attack", "chest pain", "angina", "sudden chest pain", "arm pain heart", "jaw pain heart", "shortness of breath heart"],
+                    "symptoms_indicators": "Chest pain (may spread to arms, neck, jaw, back, stomach), shortness of breath, cold sweat, nausea, lightheadedness.",
+                    "steps": [
+                        "1. Call 112 immediately. Every minute counts.",
+                        "2. Help the person sit down, rest, and try to keep them calm.",
+                        "3. Loosen any tight clothing.",
+                        "4. If they are prescribed nitroglycerin, help them take it.",
+                        "5. If they are conscious and not allergic to aspirin, and no other contraindications, offer them a single dose of aspirin (300mg chewable).",
+                        "6. Monitor their breathing and consciousness. Be prepared to start CPR if they become unconscious and stop breathing."
+                    ],
+                    "warning_signs": "Persistent or worsening chest pain, radiating pain, shortness of breath, collapse.",
+                    "image_url": "https://via.placeholder.com/300x200?text=Heart+Attack+Care"
+                },
+                {
+                    "id": "scenario_039",
+                    "title": "Anaphylaxis (Severe Allergic Reaction)",
+                    "keywords": ["anaphylaxis", "severe allergy", "allergic shock", "epipen needed", "life threatening allergy"],
+                    "symptoms_indicators": "Difficulty breathing, swelling of face/lips/throat, widespread hives, rapid/weak pulse, dizziness, nausea/vomiting, sudden feeling of dread/impending doom.",
+                    "steps": [
+                        "1. Call 112 immediately. This is a life-threatening emergency.",
+                        "2. If the person has an adrenaline auto-injector (EpiPen), help them administer it without delay.",
+                        "3. Lay the person down with their legs elevated, unless they have difficulty breathing (then help them sit up or into a comfortable position).",
+                        "4. Loosen any tight clothing.",
+                        "5. If they become unconscious and stop breathing, begin CPR.",
+                        "6. Stay with them and monitor their condition closely until medical help arrives. If symptoms return, another dose of EpiPen may be needed if available and instructed by medical personnel."
+                    ],
+                    "warning_signs": "Rapid onset of severe symptoms affecting breathing, circulation, or skin simultaneously.",
+                    "image_url": "https://via.placeholder.com/300x200?text=Anaphylaxis+EpiPen"
+                },
+                {
+                    "id": "scenario_040",
+                    "title": "Asthma Attack (Severe)",
+                    "keywords": ["asthma attack severe", "can't breathe asthma", "wheezing severe", "inhaler not working", "asthma emergency"],
+                    "symptoms_indicators": "Severe shortness of breath, intense wheezing, coughing, chest tightness, blue lips/fingernails, inability to speak full sentences, inhaler not providing relief.",
+                    "steps": [
+                        "1. Call 112 immediately.",
+                        "2. Help the person sit upright and stay calm.",
+                        "3. Help them use their reliever inhaler (usually blue) repeatedly (e.g., 4-10 puffs, one puff every 30-60 seconds, using a spacer if available).",
+                        "4. If symptoms don't improve after 5-10 minutes or worsen, continue using the inhaler while waiting for emergency services.",
+                        "5. Do NOT leave the person alone.",
+                        "6. If they become unconscious, place them in the recovery position and be prepared to start CPR if breathing stops."
+                    ],
+                    "warning_signs": "Difficulty breathing getting worse, lips turning blue, unable to speak, no response to inhaler, exhaustion.",
+                    "image_url": "https://via.placeholder.com/300x200?text=Asthma+Emergency"
+                }
+            ];
+
+            // Function to display messages in the chat window
+            function displayMessage(text, sender) {
+                const messageElement = document.createElement('div');
+                messageElement.classList.add('message', `${sender}-message`);
+
+                // Basic Markdown to HTML conversion for AI messages
+                // Converts newlines to <br>, **text** to <strong>, and ![alt](url) to <img>
+                let formattedText = text;
+                if (sender === 'ai') {
+                    formattedText = formattedText.replace(/\n/g, '<br>');
+                    formattedText = formattedText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                    formattedText = formattedText.replace(/!\[(.*?)\]\((.*?)\)/g, '<img alt="$1" src="$2">');
+                }
+
+                const paragraph = document.createElement('p');
+                paragraph.innerHTML = formattedText; // Use innerHTML to render HTML tags
+
+                messageElement.appendChild(paragraph);
+                chatMessages.appendChild(messageElement);
+                chatMessages.scrollTop = chatMessages.scrollHeight; // Scroll to the bottom
+            }
+
+            // Function to simulate typing indicator
+            function showTypingIndicator() {
+                const typingIndicator = document.createElement('div');
+                typingIndicator.className = 'message ai-message typing-indicator';
+                typingIndicator.textContent = 'MediAssist AI is typing...';
+                typingIndicator.id = 'typing-indicator'; // Add an ID to easily remove it
+                chatMessages.appendChild(typingIndicator);
+                chatMessages.scrollTop = chatMessages.scrollHeight; // Scroll to bottom
+            }
+
+            function hideTypingIndicator() {
+                const typingIndicator = document.getElementById('typing-indicator');
+                if (typingIndicator) {
+                    typingIndicator.remove();
+                }
+            }
+
+            // Function to get bot response based on keywords
+            function getBotResponse(userMessage) {
+                const lowerCaseMessage = userMessage.toLowerCase(); // Convert user message to lowercase for case-insensitive matching
+
+                for (const scenario of FIRST_AID_SCENARIOS) {
+                    const found = scenario.keywords.some(keyword => lowerCaseMessage.includes(keyword));
+                    if (found) {
+                        let response = `**${scenario.title}**<br><br>**Symptoms:** ${scenario.symptoms_indicators}<br><br>**Steps:**<br>${scenario.steps.map(step => `- ${step}`).join('<br>')}<br><br>**Warning Signs:** ${scenario.warning_signs}<br><br>`;
+                        if (scenario.image_url) {
+                            response += `![Image: ${scenario.title}](${scenario.image_url})<br><br>`;
+                        }
+                        response += "Remember, this is general guidance. For severe cases, call 112 / your local emergency number immediately.";
+                        return response;
+                    }
+                }
+
+                // Default response if no scenario matches
+                return "I'm sorry, I couldn't find specific first aid guidance for that. Please remember to call your local emergency services (like 112) for life-threatening situations. Can you describe it differently or ask about a common injury?";
+            }
+
+            // Function to handle sending messages
+            function sendMessage() {
+                const userText = userInput.value.trim();
+                if (userText) {
+                    displayMessage(userText, 'user');
+                    userInput.value = ''; // Clear input field
+
+                    showTypingIndicator(); // Show typing indicator
+
+                    setTimeout(() => {
+                        const botResponse = getBotResponse(userText);
+                        hideTypingIndicator(); // Hide typing indicator
+                        displayMessage(botResponse, 'ai');
+                    }, 1000); // Simulate AI thinking time
+                }
+            }
+
+            // Event listeners
+            sendButton.addEventListener('click', sendMessage);
+
+            userInput.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+
+            // Emergency call function
+            window.callEmergency = function() {
+                // For a real application, you might use a more sophisticated method or provide country-specific numbers.
+                // In a browser, this will typically prompt the user to make a call.
+                if (confirm("In a life-threatening emergency, always call 112 (or your local emergency number) immediately. Do you wish to try calling 112 now?")) {
+                    window.location.href = 'tel:112';
+                }
+            };
+        });
+    </script>
+</body>
+</html>
